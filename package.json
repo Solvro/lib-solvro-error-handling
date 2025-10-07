@@ -2,7 +2,6 @@
   "name": "@solvro/error-handling",
   "version": "0.0.0",
   "description": "Utilities for rich error handling",
-  "license": "MPL-2.0",
   "homepage": "https://github.com/Solvro/lib-solvro-error-handling#readme",
   "bugs": {
     "url": "https://github.com/Solvro/lib-solvro-error-handling/issues"
@@ -11,9 +10,24 @@
     "type": "git",
     "url": "git+https://github.com/Solvro/lib-solvro-error-handling.git"
   },
+  "license": "MPL-2.0",
   "type": "module",
-  "scripts": {
-    "test": "echo \"Error: no test specified\" && exit 1"
+  "exports": {
+    "./base": {
+      "types": "./dist/base.d.ts",
+      "import": "./dist/base.js",
+      "require": "./dist/base.cjs"
+    },
+    "./install-context": {
+      "types": "./dist/install-context.d.ts",
+      "import": "./dist/install-context.js",
+      "require": "./dist/install-context.cjs"
+    },
+    "./reporting": {
+      "types": "./dist/reporting.d.ts",
+      "import": "./dist/reporting.js",
+      "require": "./dist/reporting.cjs"
+    }
   },
   "files": [
     "dist"
