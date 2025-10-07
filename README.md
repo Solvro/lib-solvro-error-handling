@@ -20,7 +20,7 @@ See the documentation (in code) for more details.
 
 This module should be side-effect imported as early as possible.
 
-This module registers the `addErrorContext` function on all `Promise`s.
+This module registers the `addErrorContext` function on all `Promise`s, inspired by Rust's [`anyhow` library](https://docs.rs/anyhow/latest/anyhow/).
 
 The following code using `addErrorContext`...
 
