@@ -12,4 +12,11 @@ export default solvro({
     ],
     "unicorn/no-negated-condition": "off",
   },
+  languageOptions: {
+    parserOptions: {
+      projectService: {
+        allowDefaultProject: ["eslint.config.js"],
+      },
+    },
+  },
 });
