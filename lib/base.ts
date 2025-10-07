@@ -110,8 +110,15 @@ export function shallowIsIBaseError(error: unknown): boolean {
     // messages
     (!("messages" in error) ||
       error.messages === undefined ||
-      (Array.isArray(error) &&
-        error.every((value) => typeof value === "string"))) &&
+      (Array.isArray(error.messages) &&
+        error.messages.every(
+          (value) =>
+            typeof value === "object" &&
+            value !== null &&
+            "message" in value &&
+            // eslint-disable-next-line @typescript-eslint/no-unsafe-member-access -- why no type inferrence
+            typeof value.message === "string",
+        ))) &&
     // stack
     (!("stack" in error) ||
       error.stack === undefined ||
