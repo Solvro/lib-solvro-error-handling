@@ -86,7 +86,7 @@ export interface IBaseError {
   /**
    * Extra identifiers that will be added to the error logs, but not to the response itself.
    *
-   * The final value is calculated exactly the same was as the `extraResponseFields` property.
+   * The final value is calculated in exactly the same way as the `extraResponseFields` property.
    */
   extraErrorIdentifiers?: ExtraErrorIdentifiers;
 }
@@ -253,7 +253,8 @@ export function toIBaseError(error: unknown): IBaseError {
       error.extraIdentifierFields !== null &&
       typeof error.extraIdentifierFields === "object"
     ) {
-      reconstructed.extraErrorIdentifiers = error.extraIdentifierFields as ExtraErrorIdentifiers;
+      reconstructed.extraErrorIdentifiers =
+        error.extraIdentifierFields as ExtraErrorIdentifiers;
     }
     return reconstructed;
   }

@@ -1,10 +1,11 @@
 // This Source Code Form is subject to the terms of the Mozilla Public License, v. 2.0.
 // If a copy of the MPL was not distributed with this file, You can obtain one at https://mozilla.org/MPL/2.0/.
-import type { ExtraErrorIdentifiers, ExtraResponseFields, IBaseError, ValidationIssue } from "./base.ts";
-
-
-
-
+import type {
+  ExtraErrorIdentifiers,
+  ExtraResponseFields,
+  IBaseError,
+  ValidationIssue,
+} from "./base.ts";
 
 /**
  * Result of error stack analysis
@@ -65,7 +66,7 @@ export interface ErrorReport {
  * @returns an ErrorReport representing the given error stack
  */
 export function analyzeErrorStack(topError: IBaseError): ErrorReport {
-  let currentError: IBaseError = {cause: topError} as IBaseError;
+  let currentError: IBaseError = { cause: topError } as IBaseError;
   let lastStack: string | undefined;
   const result: Partial<ErrorReport> & {
     causeStack: string[];
@@ -180,7 +181,7 @@ export function prepareReportForLogging(
     "Extra error identifiers:",
     ...Object.entries(report.extraErrorIdentifiers).map(([k, v]) => {
       return `    ${k}: ${JSON.stringify(v)}`;
-    })
+    }),
   ].join("\n");
 }
 

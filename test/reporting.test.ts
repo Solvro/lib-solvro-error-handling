@@ -90,20 +90,20 @@ describe("reporting.ts", () => {
           silent: true,
           sensitive: true,
           extraErrorIdentifiers: {
-            "prop2": 2
-          }
+            prop2: 2,
+          },
         }),
         extraErrorIdentifiers: {
-          "prop1": 1
-        }
+          prop1: 1,
+        },
       });
 
       const report = analyzeErrorStack(error);
       expect(report).to.deep.include({
         extraErrorIdentifiers: {
-          "prop1": 1,
-          "prop2": 2
-        }
+          prop1: 1,
+          prop2: 2,
+        },
       });
     });
 
@@ -118,19 +118,19 @@ describe("reporting.ts", () => {
           silent: true,
           sensitive: true,
           extraErrorIdentifiers: {
-            "prop1": 2
-          }
+            prop1: 2,
+          },
         }),
         extraErrorIdentifiers: {
-          "prop1": 1
-        }
+          prop1: 1,
+        },
       });
 
       const report = analyzeErrorStack(error);
       expect(report).to.deep.include({
         extraErrorIdentifiers: {
-          "prop1": 1, // Should only have the top-most value
-        }
+          prop1: 1, // Should only have the top-most value
+        },
       });
     });
   });
