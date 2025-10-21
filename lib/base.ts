@@ -17,6 +17,8 @@ export type ExtraResponseFields = Record<
   JsonEncodable
 >;
 
+export type ExtraErrorIdentifiers = Record<string, JsonEncodable>;
+
 /**
  * The expected structure for thrown errors
  */
@@ -81,6 +83,12 @@ export interface IBaseError {
    * Object and array values will not be merged.
    */
   extraResponseFields?: ExtraResponseFields;
+  /**
+   * Extra identifiers that will be added to the error logs, but not to the response itself.
+   *
+   * The final value is calculated exactly the same was as the `extraResponseFields` property.
+   */
+  extraErrorIdentifiers?: ExtraErrorIdentifiers;
 }
 
 export interface ValidationIssue {
@@ -136,7 +144,12 @@ export function shallowIsIBaseError(error: unknown): boolean {
       error.extraResponseFields === undefined ||
       (typeof error.extraResponseFields === "object" &&
         error.extraResponseFields !== null &&
-        !("error" in error.extraResponseFields)))
+        !("error" in error.extraResponseFields))) &&
+    // extraErrorIdentifiers
+    (!("extraErrorIdentifiers" in error) ||
+      error.extraErrorIdentifiers === undefined ||
+      (typeof error.extraErrorIdentifiers === "object" &&
+        error.extraErrorIdentifiers !== null))
   );
 }
 
@@ -234,6 +247,14 @@ export function toIBaseError(error: unknown): IBaseError {
         delete reconstructed.extraResponseFields.error;
       }
     }
+    if (
+      "extraIdentifierFields" in error &&
+      error.extraIdentifierFields !== undefined &&
+      error.extraIdentifierFields !== null &&
+      typeof error.extraIdentifierFields === "object"
+    ) {
+      reconstructed.extraErrorIdentifiers = error.extraIdentifierFields as ExtraErrorIdentifiers;
+    }
     return reconstructed;
   }
   // everything's good on this level, check below and cast
@@ -258,10 +279,11 @@ export type BaseErrorOptions = Partial<{
   sensitive: boolean;
   silent: boolean;
   extraResponseFields: ExtraResponseFields;
+  extraErrorIdentifiers: ExtraErrorIdentifiers;
 }>;
 
 /**
- * A subclass of Error with a convienient constructor that allows for setting IBaseError properties
+ * A subclass of Error with a convenient constructor that allows for setting IBaseError properties
  *
  * Cause values will be reconstructed if they do not conform to the IBaseError interface.
  */
@@ -273,6 +295,7 @@ export class BaseError extends Error implements IBaseError {
   sensitive?: boolean;
   silent?: boolean;
   extraResponseFields?: ExtraResponseFields;
+  extraErrorIdentifiers?: ExtraErrorIdentifiers;
 
   constructor(
     message: string,
@@ -284,6 +307,7 @@ export class BaseError extends Error implements IBaseError {
       sensitive,
       silent,
       extraResponseFields,
+      extraErrorIdentifiers,
     }: BaseErrorOptions = {},
   ) {
     super(message);
@@ -296,5 +320,6 @@ export class BaseError extends Error implements IBaseError {
     this.sensitive = sensitive;
     this.silent = silent;
     this.extraResponseFields = extraResponseFields;
+    this.extraErrorIdentifiers = extraErrorIdentifiers;
   }
 }
