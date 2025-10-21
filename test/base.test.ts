@@ -252,60 +252,85 @@ describe("base.ts", () => {
           });
         },
       );
+    });
 
-      it("object with message + object with error prop as extraResponseFields is not valid IBaseError", () => {
+    describe("extraErrorIdentifiers param", () => {
+      it("object with message + empty object as extraErrorIdentifiers is valid IBaseError", () => {
         expect(
           shallowIsIBaseError({
             message: "error",
-            extraResponseFields: { error: "hiiii" },
+            extraErrorIdentifiers: {},
           }),
-        ).to.be.equal(false);
+        ).to.be.equal(true);
+      });
+
+      it("object with message + arbitrary object as extraErrorIdentifiers is valid IBaseError", () => {
+        expect(
+          shallowIsIBaseError({
+            message: "error",
+            extraErrorIdentifiers: { elo: "żelo" },
+          }),
+        ).to.be.equal(true);
+      });
+
+      forAllTypes(
+        ["empty object", "arbitrary object", "array", "undefined"],
+        (name, value) => {
+          it(`object with message + ${name} as extraErrorIdentifiers is not a valid IBaseError`, () => {
+            expect(
+              shallowIsIBaseError({
+                message: "error",
+                extraErrorIdentifiers: value,
+              }),
+            ).to.be.equal(false);
+          });
+        },
+      );
+    });
+
+    describe("isIBaseError", () => {
+      it("object with message + no cause is valid IBaseError", () => {
+        expect(isIBaseError({ message: "Error" })).to.be.equal(true);
+      });
+
+      it("object with message + object with message as cause is valid IBaseError", () => {
+        expect(
+          isIBaseError({ message: "Error", cause: { message: "cause error" } }),
+        ).to.be.equal(true);
+      });
+
+      forAllTypes(["undefined"], (name, value) => {
+        it(`object with message + ${name} as cause is not valid IBaseError`, () => {
+          expect(isIBaseError({ message: "Error", cause: value })).to.be.equal(
+            false,
+          );
+        });
       });
     });
-  });
 
-  describe("isIBaseError", () => {
-    it("object with message + no cause is valid IBaseError", () => {
-      expect(isIBaseError({ message: "Error" })).to.be.equal(true);
-    });
-
-    it("object with message + object with message as cause is valid IBaseError", () => {
-      expect(
-        isIBaseError({ message: "Error", cause: { message: "cause error" } }),
-      ).to.be.equal(true);
-    });
-
-    forAllTypes(["undefined"], (name, value) => {
-      it(`object with message + ${name} as cause is not valid IBaseError`, () => {
-        expect(isIBaseError({ message: "Error", cause: value })).to.be.equal(
-          false,
-        );
+    describe("toIBaseError", () => {
+      forAllTypes([], (name, value) => {
+        it(`${name} cast to IBaseError is valid IBaseError`, () => {
+          expect(isIBaseError(toIBaseError(value))).to.be.equal(true);
+        });
       });
-    });
-  });
 
-  describe("toIBaseError", () => {
-    forAllTypes([], (name, value) => {
-      it(`${name} cast to IBaseError is valid IBaseError`, () => {
-        expect(isIBaseError(toIBaseError(value))).to.be.equal(true);
+      it("simple valid IBaseError is returned unchanged", () => {
+        const initial = {
+          message: "hi",
+          code: "E_LO_ŻELO",
+          status: 418,
+          messages: [{ message: "eeeee" }],
+          stack: "elo at żelo line 2137",
+          sensitive: false,
+          silent: false,
+        };
+        const copied = structuredClone(initial);
+
+        const converted = toIBaseError(initial);
+        expect(converted).to.be.equal(initial);
+        expect(converted).to.be.deep.equal(copied);
       });
-    });
-
-    it("simple valid IBaseError is returned unchanged", () => {
-      const initial = {
-        message: "hi",
-        code: "E_LO_ŻELO",
-        status: 418,
-        messages: [{ message: "eeeee" }],
-        stack: "elo at żelo line 2137",
-        sensitive: false,
-        silent: false,
-      };
-      const copied = structuredClone(initial);
-
-      const converted = toIBaseError(initial);
-      expect(converted).to.be.equal(initial);
-      expect(converted).to.be.deep.equal(copied);
     });
   });
 });

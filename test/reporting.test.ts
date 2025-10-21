@@ -68,7 +68,6 @@ describe("reporting.ts", () => {
       });
 
       const report = analyzeErrorStack(error);
-
       expect(report).to.deep.include({
         message: "helo",
         code: "E_BRUH_MOMENT",
@@ -77,6 +76,61 @@ describe("reporting.ts", () => {
         sensitive: true,
         silent: false,
         validationIssues: [{ message: "bruh" }, { message: "elo żelo" }],
+      });
+    });
+
+    it("error with extra identifiers", () => {
+      const error = new BaseError("helo", {
+        code: "E_BRUH_MOMENT",
+        silent: false,
+        messages: [{ message: "bruh" }],
+        cause: new BaseError("hi", {
+          code: "E_LO_ŻELO",
+          status: 418,
+          silent: true,
+          sensitive: true,
+          extraErrorIdentifiers: {
+            "prop2": 2
+          }
+        }),
+        extraErrorIdentifiers: {
+          "prop1": 1
+        }
+      });
+
+      const report = analyzeErrorStack(error);
+      expect(report).to.deep.include({
+        extraErrorIdentifiers: {
+          "prop1": 1,
+          "prop2": 2
+        }
+      });
+    });
+
+    it("error with extra duplicate identifiers", () => {
+      const error = new BaseError("helo", {
+        code: "E_BRUH_MOMENT",
+        silent: false,
+        messages: [{ message: "bruh" }],
+        cause: new BaseError("hi", {
+          code: "E_LO_ŻELO",
+          status: 418,
+          silent: true,
+          sensitive: true,
+          extraErrorIdentifiers: {
+            "prop1": 2
+          }
+        }),
+        extraErrorIdentifiers: {
+          "prop1": 1
+        }
+      });
+
+      const report = analyzeErrorStack(error);
+      expect(report).to.deep.include({
+        extraErrorIdentifiers: {
+          "prop1": 1, // Should only have the top-most value
+        }
       });
     });
   });
