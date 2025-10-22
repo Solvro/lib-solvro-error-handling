@@ -187,6 +187,8 @@ export function prepareReportForLogging(
 
 export interface ErrorResponse {
   error: SerializedErrorReport;
+  extraFields: ExtraResponseFields;
+  extraIdentifiers: ExtraErrorIdentifiers;
 }
 
 /**
@@ -252,7 +254,6 @@ export function serializeErrorReport(
     ...serializeDefaults,
     ...options,
   };
-
   return {
     error: {
       message: report.message,
@@ -263,6 +264,12 @@ export function serializeErrorReport(
         ? report.rootStackTrace
         : undefined,
     },
-    ...report.extraResponseFields,
+    // in case the key of extra fields and identifiers are the same, they need to be divided in separate groups here
+    extraFields: {
+      ...report.extraResponseFields,
+    },
+    extraIdentifiers: {
+      ...report.extraErrorIdentifiers
+    },
   };
 }

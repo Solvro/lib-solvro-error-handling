@@ -84,7 +84,7 @@ export interface IBaseError {
    */
   extraResponseFields?: ExtraResponseFields;
   /**
-   * Extra identifiers that will be added to the error logs, but not to the response itself.
+   * Extra identifiers that will be added to the error logs and to the response itself.
    *
    * The final value is calculated in exactly the same way as the `extraResponseFields` property.
    */
