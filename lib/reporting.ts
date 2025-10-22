@@ -269,7 +269,7 @@ export function serializeErrorReport(
       ...report.extraResponseFields,
     },
     extraIdentifiers: {
-      ...report.extraErrorIdentifiers
+      ...report.extraErrorIdentifiers,
     },
   };
 }
