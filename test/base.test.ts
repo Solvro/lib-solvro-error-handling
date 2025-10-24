@@ -1,6 +1,7 @@
 // This Source Code Form is subject to the terms of the Mozilla Public License, v. 2.0.
 // If a copy of the MPL was not distributed with this file, You can obtain one at https://mozilla.org/MPL/2.0/.
 import {
+  FORBIDDEN_ERROR_FIELDS,
   isIBaseError,
   shallowIsIBaseError,
   toIBaseError,
@@ -239,6 +240,15 @@ describe("base.ts", () => {
         ).to.be.equal(true);
       });
 
+      it("object with message + object with error field as extraResponseFields is not valid IBaseError", () => {
+        expect(
+          shallowIsIBaseError({
+            message: "error",
+            extraResponseFields: { error: "żelo" },
+          }),
+        ).to.be.equal(false);
+      });
+
       forAllTypes(
         ["empty object", "arbitrary object", "undefined"],
         (name, value) => {
@@ -272,6 +282,17 @@ describe("base.ts", () => {
           }),
         ).to.be.equal(true);
       });
+
+      for (const field of FORBIDDEN_ERROR_FIELDS) {
+        it(`object with message + object with ${field} field as extraErrorFields is not valid IBaseError`, () => {
+          expect(
+            shallowIsIBaseError({
+              message: "error",
+              extraErrorFields: { [field]: "żelo" },
+            }),
+          ).to.be.equal(false);
+        });
+      }
 
       forAllTypes(
         ["empty object", "arbitrary object", "undefined"],
