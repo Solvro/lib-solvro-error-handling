@@ -1,7 +1,11 @@
 // This Source Code Form is subject to the terms of the Mozilla Public License, v. 2.0.
 // If a copy of the MPL was not distributed with this file, You can obtain one at https://mozilla.org/MPL/2.0/.
 import { BaseError } from "../lib/base.ts";
-import { analyzeErrorStack } from "../lib/reporting.ts";
+import {
+  analyzeErrorStack,
+  prepareReportForLogging,
+} from "../lib/reporting.ts";
+import type { ErrorReport } from "../lib/reporting.ts";
 
 describe("reporting.ts", () => {
   describe("analyzeErrorStack", () => {
@@ -132,6 +136,44 @@ describe("reporting.ts", () => {
           prop1: 1, // Should only have the top-most value
         },
       });
+    });
+  });
+
+  describe("prepareReportForLogging", () => {
+    it("should not include extra error fields if none were set", () => {
+      const report: ErrorReport = {
+        message: "eror",
+        code: "E_LO_ŻELO",
+        status: 500,
+        sensitive: false,
+        silent: false,
+        rootStackTrace: [],
+        causeStack: [],
+        extraResponseFields: {},
+        extraErrorFields: {},
+      };
+
+      expect(prepareReportForLogging(report)).to.not.include(
+        "Extra error fields",
+      );
+    });
+
+    it("should include extra error fields if some were set", () => {
+      const report: ErrorReport = {
+        message: "eror",
+        code: "E_LO_ŻELO",
+        status: 500,
+        sensitive: false,
+        silent: false,
+        rootStackTrace: [],
+        causeStack: [],
+        extraResponseFields: {},
+        extraErrorFields: {
+          elo: "żelo",
+        },
+      };
+
+      expect(prepareReportForLogging(report)).to.include("Extra error fields");
     });
   });
 });
