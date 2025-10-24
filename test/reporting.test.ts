@@ -89,18 +89,18 @@ describe("reporting.ts", () => {
           status: 418,
           silent: true,
           sensitive: true,
-          extraErrorIdentifiers: {
+          extraErrorFields: {
             prop2: 2,
           },
         }),
-        extraErrorIdentifiers: {
+        extraErrorFields: {
           prop1: 1,
         },
       });
 
       const report = analyzeErrorStack(error);
       expect(report).to.deep.include({
-        extraErrorIdentifiers: {
+        extraErrorFields: {
           prop1: 1,
           prop2: 2,
         },
@@ -117,18 +117,18 @@ describe("reporting.ts", () => {
           status: 418,
           silent: true,
           sensitive: true,
-          extraErrorIdentifiers: {
+          extraErrorFields: {
             prop1: 2,
           },
         }),
-        extraErrorIdentifiers: {
+        extraErrorFields: {
           prop1: 1,
         },
       });
 
       const report = analyzeErrorStack(error);
       expect(report).to.deep.include({
-        extraErrorIdentifiers: {
+        extraErrorFields: {
           prop1: 1, // Should only have the top-most value
         },
       });

@@ -1,5 +1,7 @@
 // This Source Code Form is subject to the terms of the Mozilla Public License, v. 2.0.
 // If a copy of the MPL was not distributed with this file, You can obtain one at https://mozilla.org/MPL/2.0/.
+import type { SerializedErrorReport } from "./reporting.ts";
+
 interface JsonObject {
   [k: string]: JsonEncodable;
 }
@@ -17,7 +19,18 @@ export type ExtraResponseFields = Record<
   JsonEncodable
 >;
 
-export type ExtraErrorIdentifiers = Record<string, JsonEncodable>;
+export type ExtraErrorFields = Record<
+  Exclude<string, keyof SerializedErrorReport>,
+  JsonEncodable
+>;
+
+export const FORBIDDEN_ERROR_FIELDS: (keyof SerializedErrorReport)[] = [
+  "message",
+  "code",
+  "causeStack",
+  "rootStackTrace",
+  "validationIssues",
+];
 
 /**
  * The expected structure for thrown errors
@@ -84,11 +97,12 @@ export interface IBaseError {
    */
   extraResponseFields?: ExtraResponseFields;
   /**
-   * Extra identifiers that will be added to the error logs and to the response itself.
+   * Extra fields that will be added to the error logs and to the serialized error.
    *
    * The final value is calculated in exactly the same way as the `extraResponseFields` property.
+   * This object may not include any of the properties defined in the `SerializedErrorReport` type.
    */
-  extraErrorIdentifiers?: ExtraErrorIdentifiers;
+  extraErrorFields?: ExtraErrorFields;
 }
 
 export interface ValidationIssue {
@@ -145,11 +159,13 @@ export function shallowIsIBaseError(error: unknown): boolean {
       (typeof error.extraResponseFields === "object" &&
         error.extraResponseFields !== null &&
         !("error" in error.extraResponseFields))) &&
-    // extraErrorIdentifiers
-    (!("extraErrorIdentifiers" in error) ||
-      error.extraErrorIdentifiers === undefined ||
-      (typeof error.extraErrorIdentifiers === "object" &&
-        error.extraErrorIdentifiers !== null))
+    // extraErrorFields
+    (!("extraErrorFields" in error) ||
+      error.extraErrorFields === undefined ||
+      (typeof error.extraErrorFields === "object" &&
+        error.extraErrorFields !== null &&
+        // @ts-expect-error bruh, we've literally just verified that extraErrorFields is an object
+        !FORBIDDEN_ERROR_FIELDS.some((f) => f in error.extraErrorFields)))
   );
 }
 
@@ -253,8 +269,13 @@ export function toIBaseError(error: unknown): IBaseError {
       error.extraIdentifierFields !== null &&
       typeof error.extraIdentifierFields === "object"
     ) {
-      reconstructed.extraErrorIdentifiers =
-        error.extraIdentifierFields as ExtraErrorIdentifiers;
+      reconstructed.extraErrorFields =
+        error.extraIdentifierFields as ExtraErrorFields;
+      for (const field of FORBIDDEN_ERROR_FIELDS) {
+        if (field in reconstructed.extraErrorFields) {
+          delete reconstructed.extraErrorFields[field];
+        }
+      }
     }
     return reconstructed;
   }
@@ -280,7 +301,7 @@ export type BaseErrorOptions = Partial<{
   sensitive: boolean;
   silent: boolean;
   extraResponseFields: ExtraResponseFields;
-  extraErrorIdentifiers: ExtraErrorIdentifiers;
+  extraErrorFields: ExtraErrorFields;
 }>;
 
 /**
@@ -296,7 +317,7 @@ export class BaseError extends Error implements IBaseError {
   sensitive?: boolean;
   silent?: boolean;
   extraResponseFields?: ExtraResponseFields;
-  extraErrorIdentifiers?: ExtraErrorIdentifiers;
+  extraErrorFields?: ExtraErrorFields;
 
   constructor(
     message: string,
@@ -308,7 +329,7 @@ export class BaseError extends Error implements IBaseError {
       sensitive,
       silent,
       extraResponseFields,
-      extraErrorIdentifiers,
+      extraErrorFields,
     }: BaseErrorOptions = {},
   ) {
     super(message);
@@ -321,6 +342,6 @@ export class BaseError extends Error implements IBaseError {
     this.sensitive = sensitive;
     this.silent = silent;
     this.extraResponseFields = extraResponseFields;
-    this.extraErrorIdentifiers = extraErrorIdentifiers;
+    this.extraErrorFields = extraErrorFields;
   }
 }

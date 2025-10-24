@@ -1,7 +1,7 @@
 // This Source Code Form is subject to the terms of the Mozilla Public License, v. 2.0.
 // If a copy of the MPL was not distributed with this file, You can obtain one at https://mozilla.org/MPL/2.0/.
 import type {
-  ExtraErrorIdentifiers,
+  ExtraErrorFields,
   ExtraResponseFields,
   IBaseError,
   ValidationIssue,
@@ -54,7 +54,7 @@ export interface ErrorReport {
   /**
    * Final extra error identifiers set
    */
-  extraErrorIdentifiers: ExtraErrorIdentifiers;
+  extraErrorFields: ExtraErrorFields;
 }
 
 /**
@@ -71,11 +71,11 @@ export function analyzeErrorStack(topError: IBaseError): ErrorReport {
   const result: Partial<ErrorReport> & {
     causeStack: string[];
     extraResponseFields: ExtraResponseFields;
-    extraErrorIdentifiers: ExtraErrorIdentifiers;
+    extraErrorFields: ExtraErrorFields;
   } = {
     causeStack: [],
     extraResponseFields: {},
-    extraErrorIdentifiers: {},
+    extraErrorFields: {},
   };
   while (currentError.cause !== undefined) {
     currentError = currentError.cause;
@@ -98,12 +98,12 @@ export function analyzeErrorStack(topError: IBaseError): ErrorReport {
         }
       }
     }
-    if (currentError.extraErrorIdentifiers !== undefined) {
+    if (currentError.extraErrorFields !== undefined) {
       for (const [key, value] of Object.entries(
-        currentError.extraErrorIdentifiers,
+        currentError.extraErrorFields,
       )) {
-        if (!(key in result.extraErrorIdentifiers)) {
-          result.extraErrorIdentifiers[key] = value;
+        if (!(key in result.extraErrorFields)) {
+          result.extraErrorFields[key] = value;
         }
       }
     }
@@ -141,7 +141,7 @@ export function analyzeErrorStack(topError: IBaseError): ErrorReport {
         return line;
       }) ?? [],
     extraResponseFields: result.extraResponseFields,
-    extraErrorIdentifiers: result.extraErrorIdentifiers,
+    extraErrorFields: result.extraErrorFields,
   };
 }
 
@@ -178,17 +178,20 @@ export function prepareReportForLogging(
     ...report.causeStack.map((c) => `    ${c}`),
     "Root stack trace:",
     ...report.rootStackTrace.map((f) => `    ${f}`),
-    "Extra error identifiers:",
-    ...Object.entries(report.extraErrorIdentifiers).map(([k, v]) => {
-      return `    ${k}: ${JSON.stringify(v)}`;
-    }),
+    // only include extra error fields if they exist
+    ...(Object.keys(report.extraErrorFields).length > 0
+      ? [
+          "Extra error fields:",
+          ...Object.entries(report.extraErrorFields).map(([k, v]) => {
+            return `    ${k}: ${JSON.stringify(v)}`;
+          }),
+        ]
+      : []),
   ].join("\n");
 }
 
 export interface ErrorResponse {
   error: SerializedErrorReport;
-  extraFields: ExtraResponseFields;
-  extraIdentifiers: ExtraErrorIdentifiers;
 }
 
 /**
@@ -263,13 +266,8 @@ export function serializeErrorReport(
       rootStackTrace: fullOptions.includeStackTrace
         ? report.rootStackTrace
         : undefined,
+      ...report.extraErrorFields,
     },
-    // in case the key of extra fields and identifiers are the same, they need to be divided in separate groups here
-    extraFields: {
-      ...report.extraResponseFields,
-    },
-    extraIdentifiers: {
-      ...report.extraErrorIdentifiers,
-    },
+    ...report.extraResponseFields,
   };
 }

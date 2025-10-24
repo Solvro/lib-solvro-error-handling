@@ -10,6 +10,7 @@ export default solvro({
         allowNumber: true,
       },
     ],
+    "@typescript-eslint/no-dynamic-delete": "off",
     "unicorn/no-negated-condition": "off",
   },
   languageOptions: {

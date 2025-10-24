@@ -254,21 +254,21 @@ describe("base.ts", () => {
       );
     });
 
-    describe("extraErrorIdentifiers param", () => {
-      it("object with message + empty object as extraErrorIdentifiers is valid IBaseError", () => {
+    describe("extraErrorFields param", () => {
+      it("object with message + empty object as extraErrorFields is valid IBaseError", () => {
         expect(
           shallowIsIBaseError({
             message: "error",
-            extraErrorIdentifiers: {},
+            extraErrorFields: {},
           }),
         ).to.be.equal(true);
       });
 
-      it("object with message + arbitrary object as extraErrorIdentifiers is valid IBaseError", () => {
+      it("object with message + arbitrary object as extraErrorFields is valid IBaseError", () => {
         expect(
           shallowIsIBaseError({
             message: "error",
-            extraErrorIdentifiers: { elo: "żelo" },
+            extraErrorFields: { elo: "żelo" },
           }),
         ).to.be.equal(true);
       });
@@ -276,11 +276,11 @@ describe("base.ts", () => {
       forAllTypes(
         ["empty object", "arbitrary object", "array", "undefined"],
         (name, value) => {
-          it(`object with message + ${name} as extraErrorIdentifiers is not a valid IBaseError`, () => {
+          it(`object with message + ${name} as extraErrorFields is not a valid IBaseError`, () => {
             expect(
               shallowIsIBaseError({
                 message: "error",
-                extraErrorIdentifiers: value,
+                extraErrorFields: value,
               }),
             ).to.be.equal(false);
           });
