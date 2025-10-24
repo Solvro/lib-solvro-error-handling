@@ -1,5 +1,7 @@
 // This Source Code Form is subject to the terms of the Mozilla Public License, v. 2.0.
 // If a copy of the MPL was not distributed with this file, You can obtain one at https://mozilla.org/MPL/2.0/.
+import { isPlainObject } from "@solvro/utils/misc";
+
 import type { SerializedErrorReport } from "./reporting.ts";
 
 interface JsonObject {
@@ -156,14 +158,12 @@ export function shallowIsIBaseError(error: unknown): boolean {
     // extraResponseFields
     (!("extraResponseFields" in error) ||
       error.extraResponseFields === undefined ||
-      (typeof error.extraResponseFields === "object" &&
-        error.extraResponseFields !== null &&
+      (isPlainObject(error.extraResponseFields) &&
         !("error" in error.extraResponseFields))) &&
     // extraErrorFields
     (!("extraErrorFields" in error) ||
       error.extraErrorFields === undefined ||
-      (typeof error.extraErrorFields === "object" &&
-        error.extraErrorFields !== null &&
+      (isPlainObject(error.extraErrorFields) &&
         // @ts-expect-error bruh, we've literally just verified that extraErrorFields is an object
         !FORBIDDEN_ERROR_FIELDS.some((f) => f in error.extraErrorFields)))
   );
@@ -251,9 +251,7 @@ export function toIBaseError(error: unknown): IBaseError {
     }
     if (
       "extraResponseFields" in error &&
-      error.extraResponseFields !== undefined &&
-      error.extraResponseFields !== null &&
-      typeof error.extraResponseFields === "object"
+      isPlainObject(error.extraResponseFields)
     ) {
       reconstructed.extraResponseFields = error.extraResponseFields as Record<
         string,
@@ -265,9 +263,7 @@ export function toIBaseError(error: unknown): IBaseError {
     }
     if (
       "extraIdentifierFields" in error &&
-      error.extraIdentifierFields !== undefined &&
-      error.extraIdentifierFields !== null &&
-      typeof error.extraIdentifierFields === "object"
+      isPlainObject(error.extraIdentifierFields)
     ) {
       reconstructed.extraErrorFields =
         error.extraIdentifierFields as ExtraErrorFields;

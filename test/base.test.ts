@@ -240,7 +240,7 @@ describe("base.ts", () => {
       });
 
       forAllTypes(
-        ["empty object", "arbitrary object", "array", "undefined"],
+        ["empty object", "arbitrary object", "undefined"],
         (name, value) => {
           it(`object with message + ${name} as extraResponseFields is not a valid IBaseError`, () => {
             expect(
@@ -274,7 +274,7 @@ describe("base.ts", () => {
       });
 
       forAllTypes(
-        ["empty object", "arbitrary object", "array", "undefined"],
+        ["empty object", "arbitrary object", "undefined"],
         (name, value) => {
           it(`object with message + ${name} as extraErrorFields is not a valid IBaseError`, () => {
             expect(
