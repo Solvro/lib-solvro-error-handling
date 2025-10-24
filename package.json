@@ -1,6 +1,6 @@
 {
   "name": "@solvro/error-handling",
-  "version": "1.0.0",
+  "version": "1.1.0",
   "description": "Utilities for rich error handling",
   "homepage": "https://github.com/Solvro/lib-solvro-error-handling#readme",
   "bugs": {
