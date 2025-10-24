@@ -1,6 +1,7 @@
 // This Source Code Form is subject to the terms of the Mozilla Public License, v. 2.0.
 // If a copy of the MPL was not distributed with this file, You can obtain one at https://mozilla.org/MPL/2.0/.
 import {
+  FORBIDDEN_ERROR_FIELDS,
   isIBaseError,
   shallowIsIBaseError,
   toIBaseError,
@@ -239,8 +240,17 @@ describe("base.ts", () => {
         ).to.be.equal(true);
       });
 
+      it("object with message + object with error field as extraResponseFields is not valid IBaseError", () => {
+        expect(
+          shallowIsIBaseError({
+            message: "error",
+            extraResponseFields: { error: "żelo" },
+          }),
+        ).to.be.equal(false);
+      });
+
       forAllTypes(
-        ["empty object", "arbitrary object", "array", "undefined"],
+        ["empty object", "arbitrary object", "undefined"],
         (name, value) => {
           it(`object with message + ${name} as extraResponseFields is not a valid IBaseError`, () => {
             expect(
@@ -252,60 +262,96 @@ describe("base.ts", () => {
           });
         },
       );
+    });
 
-      it("object with message + object with error prop as extraResponseFields is not valid IBaseError", () => {
+    describe("extraErrorFields param", () => {
+      it("object with message + empty object as extraErrorFields is valid IBaseError", () => {
         expect(
           shallowIsIBaseError({
             message: "error",
-            extraResponseFields: { error: "hiiii" },
+            extraErrorFields: {},
           }),
-        ).to.be.equal(false);
+        ).to.be.equal(true);
+      });
+
+      it("object with message + arbitrary object as extraErrorFields is valid IBaseError", () => {
+        expect(
+          shallowIsIBaseError({
+            message: "error",
+            extraErrorFields: { elo: "żelo" },
+          }),
+        ).to.be.equal(true);
+      });
+
+      for (const field of FORBIDDEN_ERROR_FIELDS) {
+        it(`object with message + object with ${field} field as extraErrorFields is not valid IBaseError`, () => {
+          expect(
+            shallowIsIBaseError({
+              message: "error",
+              extraErrorFields: { [field]: "żelo" },
+            }),
+          ).to.be.equal(false);
+        });
+      }
+
+      forAllTypes(
+        ["empty object", "arbitrary object", "undefined"],
+        (name, value) => {
+          it(`object with message + ${name} as extraErrorFields is not a valid IBaseError`, () => {
+            expect(
+              shallowIsIBaseError({
+                message: "error",
+                extraErrorFields: value,
+              }),
+            ).to.be.equal(false);
+          });
+        },
+      );
+    });
+
+    describe("isIBaseError", () => {
+      it("object with message + no cause is valid IBaseError", () => {
+        expect(isIBaseError({ message: "Error" })).to.be.equal(true);
+      });
+
+      it("object with message + object with message as cause is valid IBaseError", () => {
+        expect(
+          isIBaseError({ message: "Error", cause: { message: "cause error" } }),
+        ).to.be.equal(true);
+      });
+
+      forAllTypes(["undefined"], (name, value) => {
+        it(`object with message + ${name} as cause is not valid IBaseError`, () => {
+          expect(isIBaseError({ message: "Error", cause: value })).to.be.equal(
+            false,
+          );
+        });
       });
     });
-  });
 
-  describe("isIBaseError", () => {
-    it("object with message + no cause is valid IBaseError", () => {
-      expect(isIBaseError({ message: "Error" })).to.be.equal(true);
-    });
-
-    it("object with message + object with message as cause is valid IBaseError", () => {
-      expect(
-        isIBaseError({ message: "Error", cause: { message: "cause error" } }),
-      ).to.be.equal(true);
-    });
-
-    forAllTypes(["undefined"], (name, value) => {
-      it(`object with message + ${name} as cause is not valid IBaseError`, () => {
-        expect(isIBaseError({ message: "Error", cause: value })).to.be.equal(
-          false,
-        );
+    describe("toIBaseError", () => {
+      forAllTypes([], (name, value) => {
+        it(`${name} cast to IBaseError is valid IBaseError`, () => {
+          expect(isIBaseError(toIBaseError(value))).to.be.equal(true);
+        });
       });
-    });
-  });
 
-  describe("toIBaseError", () => {
-    forAllTypes([], (name, value) => {
-      it(`${name} cast to IBaseError is valid IBaseError`, () => {
-        expect(isIBaseError(toIBaseError(value))).to.be.equal(true);
+      it("simple valid IBaseError is returned unchanged", () => {
+        const initial = {
+          message: "hi",
+          code: "E_LO_ŻELO",
+          status: 418,
+          messages: [{ message: "eeeee" }],
+          stack: "elo at żelo line 2137",
+          sensitive: false,
+          silent: false,
+        };
+        const copied = structuredClone(initial);
+
+        const converted = toIBaseError(initial);
+        expect(converted).to.be.equal(initial);
+        expect(converted).to.be.deep.equal(copied);
       });
-    });
-
-    it("simple valid IBaseError is returned unchanged", () => {
-      const initial = {
-        message: "hi",
-        code: "E_LO_ŻELO",
-        status: 418,
-        messages: [{ message: "eeeee" }],
-        stack: "elo at żelo line 2137",
-        sensitive: false,
-        silent: false,
-      };
-      const copied = structuredClone(initial);
-
-      const converted = toIBaseError(initial);
-      expect(converted).to.be.equal(initial);
-      expect(converted).to.be.deep.equal(copied);
     });
   });
 });

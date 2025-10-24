@@ -1,6 +1,7 @@
 // This Source Code Form is subject to the terms of the Mozilla Public License, v. 2.0.
 // If a copy of the MPL was not distributed with this file, You can obtain one at https://mozilla.org/MPL/2.0/.
 import type {
+  ExtraErrorFields,
   ExtraResponseFields,
   IBaseError,
   ValidationIssue,
@@ -50,6 +51,10 @@ export interface ErrorReport {
    * Final extra response field set
    */
   extraResponseFields: ExtraResponseFields;
+  /**
+   * Final extra error identifiers set
+   */
+  extraErrorFields: ExtraErrorFields;
 }
 
 /**
@@ -61,17 +66,19 @@ export interface ErrorReport {
  * @returns an ErrorReport representing the given error stack
  */
 export function analyzeErrorStack(topError: IBaseError): ErrorReport {
-  let currentError: IBaseError = topError;
+  let currentError: IBaseError = { cause: topError } as IBaseError;
   let lastStack: string | undefined;
   const result: Partial<ErrorReport> & {
     causeStack: string[];
     extraResponseFields: ExtraResponseFields;
+    extraErrorFields: ExtraErrorFields;
   } = {
     causeStack: [],
     extraResponseFields: {},
+    extraErrorFields: {},
   };
-  // eslint-disable-next-line @typescript-eslint/no-unnecessary-condition -- so what, i can't even have an infinite loop now? literally 1984
-  while (true) {
+  while (currentError.cause !== undefined) {
+    currentError = currentError.cause;
     result.causeStack.push(currentError.message);
     result.status ??= currentError.status;
     result.code ??= currentError.code;
@@ -82,7 +89,6 @@ export function analyzeErrorStack(topError: IBaseError): ErrorReport {
       (currentError.status !== undefined
         ? currentError.status < 500
         : undefined);
-    lastStack = currentError.stack ?? lastStack;
     if (currentError.extraResponseFields !== undefined) {
       for (const [key, value] of Object.entries(
         currentError.extraResponseFields,
@@ -92,10 +98,15 @@ export function analyzeErrorStack(topError: IBaseError): ErrorReport {
         }
       }
     }
-    if (currentError.cause === undefined) {
-      break;
+    if (currentError.extraErrorFields !== undefined) {
+      for (const [key, value] of Object.entries(
+        currentError.extraErrorFields,
+      )) {
+        if (!(key in result.extraErrorFields)) {
+          result.extraErrorFields[key] = value;
+        }
+      }
     }
-    currentError = currentError.cause;
   }
   let cwd: string | undefined;
   try {
@@ -130,6 +141,7 @@ export function analyzeErrorStack(topError: IBaseError): ErrorReport {
         return line;
       }) ?? [],
     extraResponseFields: result.extraResponseFields,
+    extraErrorFields: result.extraErrorFields,
   };
 }
 
@@ -166,6 +178,15 @@ export function prepareReportForLogging(
     ...report.causeStack.map((c) => `    ${c}`),
     "Root stack trace:",
     ...report.rootStackTrace.map((f) => `    ${f}`),
+    // only include extra error fields if they exist
+    ...(Object.keys(report.extraErrorFields).length > 0
+      ? [
+          "Extra error fields:",
+          ...Object.entries(report.extraErrorFields).map(([k, v]) => {
+            return `    ${k}: ${JSON.stringify(v)}`;
+          }),
+        ]
+      : []),
   ].join("\n");
 }
 
@@ -236,7 +257,6 @@ export function serializeErrorReport(
     ...serializeDefaults,
     ...options,
   };
-
   return {
     error: {
       message: report.message,
@@ -246,6 +266,7 @@ export function serializeErrorReport(
       rootStackTrace: fullOptions.includeStackTrace
         ? report.rootStackTrace
         : undefined,
+      ...report.extraErrorFields,
     },
     ...report.extraResponseFields,
   };
